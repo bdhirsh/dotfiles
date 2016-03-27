@@ -1,0 +1,7 @@
+host nets212.cis.upenn.edu
+user hirshb
+identityfile ~/.ssh/id_rsa
+
+Host eniac
+  HostName eniac.seas.upenn.edu
+  User hirshb
