@@ -1,0 +1,197 @@
+# .bashrc
+
+# Keep lots of command history
+HISTFILESIZE=-1
+HISTSIZE=1000000
+shopt -s histappend
+
+EDITOR=vim
+
+# default fzf find command is very slow for some reason.
+# I followed the advice from https://github.com/junegunn/fzf/issues/1419
+# (Actually this didn't help. I fixed it in my vimrc instead)
+FZF_DEFAULT_COMMAND='find . -type f'
+
+TMUX_OPTIONS="-CC"
+
+export CC=/usr/bin/gcc
+export CXX=/usr/bin/g++
+
+#export CC=/opt/rh/gcc-toolset-12/root/bin/gcc
+#export CXX=/opt/rh/gcc-toolset-12/root/bin/g++
+
+#export CC=clang
+#export CXX=clang++
+
+#if [[ ! $TMUX && -t 0 && $TERM_PROGRAM != vscode ]]; then
+#  tmux $TMUX_OPTIONS new-session -As auto
+#fi
+
+alias gdb='gdb -q'
+
+# TODO: COME BACK TO THIS WHEN/IF I WANT TO FIX CCACHE
+#export PATH=~/ccache/lib:$PATH
+#export CUDA_NVCC_EXECUTABLE=~/ccache/cuda/nvcc
+
+#sudo ln -sfn /usr/local/cuda-12.4 /usr/local/cuda
+#sudo ln -sfn /usr/local/cuda-12.6 /usr/local/cuda
+sudo ln -sfn /usr/local/cuda-12.9 /usr/local/cuda
+
+#USE_CUDA=1 TORCH_CUDA_ARCH_LIST="8.0;9.0" BUILD_CAFFE2_OPS=0 USE_XNNPACK=0 USE_FBGEMM=0 USE_QNNPACK=0 USE_GOLD_LINKER=1 python setup.py develop
+PATH="/home/hirsheybar/.local/bin/:$PATH"
+alias python=python3
+alias sa='conda activate $PWD-env'
+goenv_OLD() {
+    cd ~/local/$1/pytorch && sa
+}
+
+#export PATH=/usr/local/cuda/bin:$PATH:/usr/include
+#export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda/bin/nvcc
+
+#export PATH=/usr/local/cuda-12.1/bin:$PATH:/usr/include
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-12.1/bin/nvcc
+
+# This one should work
+#export PATH=/usr/local/cuda-12.0/bin:$PATH:/usr/include
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.0/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-12.0/bin/nvcc
+
+# use this for 12.4
+#export PATH=/usr/local/cuda-12.4/bin:$PATH:/usr/include
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-12.4/bin/nvcc
+
+#export PATH=/usr/local/cuda-12.6/bin:$PATH:/usr/include
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-12.6/bin/nvcc
+#
+export PATH=/usr/local/cuda-12.9/bin:$PATH:/usr/include
+export LD_LIBRARY_PATH=/usr/local/cuda-12.9/lib64:$LD_LIBRARY_PATH
+export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-12.9/bin/nvcc
+
+
+mk_env() {
+    conda create -n "pytorch_$1" python==3.10 pyyaml cmake typing_extensions
+	conda install -y astunparse numpy scipy ninja pyyaml mkl mkl-include setuptools cmake typing-extensions requests protobuf numba cython scikit-learn
+}
+
+mk_conda2() {
+    path="/home/hirsheybar/local/new/$1_pytorch"
+    cd "/home/hirsheybar/local/new/pytorch"
+    git worktree add "../$1_pytorch"
+    cd "/home/hirsheybar/local/new/$1_pytorch"
+
+    conda create -n "new$1_pytorch" python==3.12 pyyaml cmake typing_extensions
+    conda activate "new$1_pytorch"
+	conda install -y astunparse numpy scipy ninja pyyaml mkl mkl-include setuptools cmake typing-extensions requests protobuf numba cython scikit-learn
+
+    git submodule update --init --recursive
+    python setup.py develop
+    cd benchmarks/dynamo
+    make build-deps
+}
+
+mk_conda3() {
+    path="/home/hirsheybar/local/new$1/pytorch"
+    mkdir -p "/home/hirsheybar/local/new$1/pytorch"
+    cd "/home/hirsheybar/local/new$1/pytorch"
+
+    conda create -n "new$1_pytorch" python==3.12 pyyaml cmake typing_extensions
+    conda activate "new$1_pytorch"
+	conda install -y astunparse numpy scipy ninja pyyaml mkl mkl-include setuptools cmake typing-extensions requests protobuf numba cython scikit-learn
+
+    git clone git@github.com:pytorch/pytorch.git
+    cd pytorch
+
+    git submodule update --init --recursive
+    python setup.py develop
+    cd benchmarks/dynamo
+    make build-deps
+}
+
+mk_conda() {
+    path="/home/hirsheybar/local/$1"
+    mkdir -p $path
+    cd ~/local/$1
+    #conda create -n $PWD_env python==3.10 pyyaml cmake typing_extensions setuptools
+    #conda create -n $PWD_env pyyaml cmake typing_extensions setuptools python==3.10
+
+    conda create -n "pytorch_$1" python==3.12 pyyaml cmake typing_extensions
+    conda activate "pytorch_$1"
+	conda install -y astunparse numpy scipy ninja pyyaml mkl mkl-include setuptools cmake typing-extensions requests protobuf numba cython scikit-learn
+
+    git clone git@github.com:pytorch/pytorch.git
+    cd pytorch
+    python setup.py develop
+    cd benchmarks/dynamo
+    make build-deps
+}
+
+goenv() {
+    cd ~/local/$1/pytorch
+    sa
+}
+
+goenv2() {
+    cd ~/local/$1_pytorch
+    conda activate $1_pytorch
+}
+
+goenvnew() {
+    cd ~/local/new/$1_pytorch
+    conda activate new$1_pytorch
+}
+
+
+#export PATH=/usr/local/cuda-11.4/bin:$PATH
+#export LD_LIBRARY_PATH=/usr/local/cuda-11.4/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-11.4/bin/nvcc
+
+#export PATH=/usr/local/cuda-12.1/bin:$PATH
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:$LD_LIBRARY_PATH
+#export CUDA_NVCC_EXECUTABLE=/usr/local/cuda-12.1/bin/nvcc
+#export PATH=/home/hirsheybar/local/ccache/lib:/home/hirsheybar/local/ccache/bin:$PATH
+#export CUDA_NVCC_EXECUTABLE=/home/hirsheybar/local/ccache/cuda/nvcc
+export MAX_JOBS=48  # Prevent building pytorch from taking all cpu cores and starving other users
+
+export TORCH_LOGS_FORMAT="%(levelname)s: %(message)s"
+
+# use this for 12.4
+#export PATH=/usr/local/cuda-12.4/bin:$PATH
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib64/:$LD_LIBRARY_PATH%
+
+#export PATH=/usr/local/cuda-12.6/bin:$PATH
+#export LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64/:$LD_LIBRARY_PATH%
+
+export PATH=/usr/local/cuda-12.9/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-12.9/lib64/:$LD_LIBRARY_PATH%
+
+# handy tlparse helper
+function tlp {
+  rm -rf ~/tmp/trace_logs/*
+  TORCH_TRACE=~/tmp/trace_logs "$@"
+  tlparse ~/tmp/trace_logs --slug "$USER/$(uuidgen)/custom" --overwrite-manifold
+}
+
+alias nuke="git clean -dfx && git submodule sync && git submodule update --init --recursive"
+
+
+function perfetto {
+    python ~/generate_trace.py $1
+}
+
+upload_snapshot() {
+    input_file="$1"
+    output_file="${input_file%.pickle}.html"
+    python torch/cuda/_memory_viz.py trace_plot "$input_file" -o "$output_file"
+    python ~/generate_trace_link.py "$output_file" --is-memory-snapshot
+}
+
+# et -c 'tmux -CC new -s main'
+# et -c 'tmux -CC attach -t main'
+
+# PYTORCH_NO_CUDA_MEMORY_CACHING=1 compute-sanitizer --tool memcheck python foo.py > ima.txt
+
+# remove inductor internals from triton output https://github.com/pytorch/pytorch/pull/125811
